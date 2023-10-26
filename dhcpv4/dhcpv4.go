@@ -627,10 +627,10 @@ func (d *DHCPv4) HostName() string {
 		return ""
 	}
 
-	if decodeBytes, err := simplifiedchinese.GB18030.NewDecoder().Bytes(data); err == nil {
+	if decodeBytes, err := simplifiedchinese.GB18030.NewDecoder().Bytes(v); err == nil {
 		return strings.TrimRight(string(decodeBytes), "\x00")
 	} else {
-		return strings.TrimRight(string(data), "\x00")
+		return strings.TrimRight(string(v), "\x00")
 	}
 }
 

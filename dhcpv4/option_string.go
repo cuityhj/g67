@@ -1,5 +1,9 @@
 package dhcpv4
 
+import (
+	"strings"
+)
+
 // String represents an option encapsulating a string in IPv4 DHCP.
 //
 // This representation is shared by multiple options specified by RFC 2132,

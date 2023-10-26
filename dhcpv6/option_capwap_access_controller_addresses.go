@@ -1,6 +1,7 @@
 package dhcpv6
 
 import (
+	"fmt"
 	"net"
 
 	"github.com/u-root/uio/uio"
