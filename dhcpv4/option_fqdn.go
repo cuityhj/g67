@@ -41,7 +41,7 @@ func (fqdn *FQDN) FromBytes(data []byte) (err error) {
 	return buf.FinError()
 }
 
-func (fqdn FQDN) ToBytes() []byte {
+func (fqdn *FQDN) ToBytes() []byte {
 	buf := uio.NewBigEndianBuffer(nil)
 	buf.Write8(fqdn.Flags)
 	buf.Write8(fqdn.Rcode1)
@@ -50,7 +50,7 @@ func (fqdn FQDN) ToBytes() []byte {
 	return buf.Data()
 }
 
-func (fqdn FQDN) String() string {
+func (fqdn *FQDN) String() string {
 	return fqdn.DomainName
 }
 

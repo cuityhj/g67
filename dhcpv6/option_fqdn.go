@@ -7,6 +7,13 @@ import (
 	"github.com/u-root/uio/uio"
 )
 
+const (
+	FLAG_S    = 0x01
+	FLAG_O    = 0x02
+	FLAG_N    = 0x04
+	FLAG_MASK = 0x7
+)
+
 // OptFQDN implements OptionFQDN option.
 //
 // https://tools.ietf.org/html/rfc4704

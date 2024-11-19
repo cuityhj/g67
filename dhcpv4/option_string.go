@@ -23,12 +23,14 @@ func (o *String) FromBytes(data []byte) error {
 }
 
 // GetString parses an RFC 2132 string from o[code].
+//
+// returns without \x00 and \u0000
 func GetString(code OptionCode, o Options) string {
 	v := o.Get(code)
 	if v == nil {
 		return ""
 	}
-	return string(v)
+	return RemoveU0000(string(v))
 }
 
 // OptDomainName returns a new DHCPv4 Domain Name option.

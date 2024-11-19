@@ -24,10 +24,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/cuityhj/g67/iana"
-	"github.com/cuityhj/g67/rfc1035label"
 	"github.com/u-root/uio/rand"
 	"github.com/u-root/uio/uio"
+	"golang.org/x/text/encoding/simplifiedchinese"
+
+	"github.com/cuityhj/g67/iana"
+	"github.com/cuityhj/g67/rfc1035label"
 )
 
 const (
@@ -620,8 +622,16 @@ func (d *DHCPv4) DomainName() string {
 //
 // The Host Name option is described by RFC 2132, Section 3.14.
 func (d *DHCPv4) HostName() string {
-	name := GetString(OptionHostName, d.Options)
-	return strings.TrimRight(name, "\x00")
+	v := d.Options.Get(OptionHostName)
+	if v == nil {
+		return ""
+	}
+
+	if decodeBytes, err := simplifiedchinese.GB18030.NewDecoder().Bytes(v); err == nil {
+		return RemoveU0000(string(decodeBytes))
+	} else {
+		return RemoveU0000(string(v))
+	}
 }
 
 // RootPath parses the DHCPv4 Root Path option if present.
@@ -635,16 +645,14 @@ func (d *DHCPv4) RootPath() string {
 //
 // The Bootfile Name option is described by RFC 2132, Section 9.5.
 func (d *DHCPv4) BootFileNameOption() string {
-	name := GetString(OptionBootfileName, d.Options)
-	return strings.TrimRight(name, "\x00")
+	return GetString(OptionBootfileName, d.Options)
 }
 
 // TFTPServerName parses the DHCPv4 TFTP Server Name option if present.
 //
 // The TFTP Server Name option is described by RFC 2132, Section 9.4.
 func (d *DHCPv4) TFTPServerName() string {
-	name := GetString(OptionTFTPServerName, d.Options)
-	return strings.TrimRight(name, "\x00")
+	return GetString(OptionTFTPServerName, d.Options)
 }
 
 // ClassIdentifier parses the DHCPv4 Class Identifier option if present.
@@ -652,6 +660,18 @@ func (d *DHCPv4) TFTPServerName() string {
 // The Vendor Class Identifier option is described by RFC 2132, Section 9.13.
 func (d *DHCPv4) ClassIdentifier() string {
 	return GetString(OptionClassIdentifier, d.Options)
+}
+
+func (d *DHCPv4) FQDN() *FQDN {
+	v := d.Options.Get(OptionFQDN)
+	if v == nil {
+		return nil
+	}
+	fqdn := &FQDN{}
+	if err := fqdn.FromBytes(v); err != nil {
+		return nil
+	}
+	return fqdn
 }
 
 // ClientArch returns the Client System Architecture Type option.
@@ -687,15 +707,7 @@ func (d *DHCPv4) DomainSearch() *rfc1035label.Labels {
 //
 // The IP address lease time option is described by RFC 2132, Section 9.2.
 func (d *DHCPv4) IPAddressLeaseTime(def time.Duration) time.Duration {
-	v := d.Options.Get(OptionIPAddressLeaseTime)
-	if v == nil {
-		return def
-	}
-	var dur Duration
-	if err := dur.FromBytes(v); err != nil {
-		return def
-	}
-	return time.Duration(dur)
+	return GetDuration(OptionIPAddressLeaseTime, d.Options, def)
 }
 
 // IPAddressRenewalTime returns the IP address renewal time or the given
@@ -703,15 +715,7 @@ func (d *DHCPv4) IPAddressLeaseTime(def time.Duration) time.Duration {
 //
 // The IP address renewal time option is described by RFC 2132, Section 9.11.
 func (d *DHCPv4) IPAddressRenewalTime(def time.Duration) time.Duration {
-	v := d.Options.Get(OptionRenewTimeValue)
-	if v == nil {
-		return def
-	}
-	var dur Duration
-	if err := dur.FromBytes(v); err != nil {
-		return def
-	}
-	return time.Duration(dur)
+	return GetDuration(OptionRenewTimeValue, d.Options, def)
 }
 
 // IPAddressRebindingTime returns the IP address rebinding time or the given
@@ -719,31 +723,15 @@ func (d *DHCPv4) IPAddressRenewalTime(def time.Duration) time.Duration {
 //
 // The IP address rebinding time option is described by RFC 2132, Section 9.12.
 func (d *DHCPv4) IPAddressRebindingTime(def time.Duration) time.Duration {
-	v := d.Options.Get(OptionRebindingTimeValue)
-	if v == nil {
-		return def
-	}
-	var dur Duration
-	if err := dur.FromBytes(v); err != nil {
-		return def
-	}
-	return time.Duration(dur)
+	return GetDuration(OptionRebindingTimeValue, d.Options, def)
 }
 
 // IPv6OnlyPreferred returns the V6ONLY_WAIT duration, and a boolean
 // indicating whether this option was present.
 //
 // The IPv6-Only Preferred option is described by RFC 8925, Section 3.1.
-func (d *DHCPv4) IPv6OnlyPreferred() (time.Duration, bool) {
-	v := d.Options.Get(OptionIPv6OnlyPreferred)
-	if v == nil {
-		return 0, false
-	}
-	var dur Duration
-	if err := dur.FromBytes(v); err != nil {
-		return 0, false
-	}
-	return time.Duration(dur), true
+func (d *DHCPv4) IPv6OnlyPreferred(def time.Duration) time.Duration {
+	return GetDuration(OptionIPv6OnlyPreferred, d.Options, def)
 }
 
 // MaxMessageSize returns the DHCP Maximum Message Size if present.
