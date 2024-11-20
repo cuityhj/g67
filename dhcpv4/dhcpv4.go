@@ -662,6 +662,9 @@ func (d *DHCPv4) ClassIdentifier() string {
 	return GetString(OptionClassIdentifier, d.Options)
 }
 
+// FQDN parses the DHCPv4 FQDN option if present.
+//
+// the FQDN option is described by RFC4702.
 func (d *DHCPv4) FQDN() *FQDN {
 	v := d.Options.Get(OptionFQDN)
 	if v == nil {
